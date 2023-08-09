@@ -18,6 +18,10 @@ My native language is Chinese. I'm fluent in English. I'm learning Japanese. So 
 => /jp/ 日本語での内容 ({{- $jpPostsLen -}})
 => /zh/ 中文内容 ({{- $zhPostsLen -}})
 
+## Code
+A few tools I wrote mainly for self use, but maybe also useful for others.
+=> https://github.com/cranej github.com/cranej
+
 ## Contact
 You can reach me via email:
 => mailto:crane@cranejin.com crane@cranejin.com
