@@ -1,0 +1,13 @@
+[Unit]
+Description=Agate gemini server
+
+[Service]
+WorkingDirectory=/home/cranej/dualblog
+User=cranej
+ExecStart=/home/cranej/.cargo/bin/agate --hostname cranejin.com --content gemini --lang en
+
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=default.target
