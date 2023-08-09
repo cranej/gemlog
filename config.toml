@@ -1,0 +1,4 @@
+title = "cranej's gemini page"
+url = "cranejin.com"
+source_dir = "content"
+dest_dir = "public"

@@ -1,0 +1,5 @@
+#!/usr/bin/bash
+
+./bin/gssg
+cp nongmi/* public
+./bin/gem2site public public_html

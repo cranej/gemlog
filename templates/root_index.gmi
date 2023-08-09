@@ -1,0 +1,33 @@
+{{ .Content -}}
+# cranej's Blog
+
+I'm a programmer, a reader, and a pipe smoker(which is not good). Hopefully I can write more blogs from now on. But I don't think I can based on my prior experiences...:)
+
+This site is published both as Gemini capsule and web site. You can read this blog on Gemini:
+=> gemini://cranejin.com
+
+or read on the web:
+=> https://cranejin.com
+
+## Posts
+My native language is Chinese. I'm fluent in English. I'm learning Japanese. So there will be contents written in these three languages.
+{{ $enPostsLen := len (index .Children "en/posts") -}}
+{{ $zhPostsLen := len (index .Children "zh/posts") -}}
+{{ $jpPostsLen := len (index .Children "jp/posts") -}}
+=> /en/ Contents in English ({{- $enPostsLen -}})
+=> /jp/ 日本語での内容 ({{- $jpPostsLen -}})
+=> /zh/ 中文内容 ({{- $zhPostsLen -}})
+
+## Contact
+You can reach me via email:
+=> mailto:crane@cranejin.com crane@cranejin.com
+=> mailto:crane.jin@outlook.com crane.jin@outlook.com
+
+If you prefer to send encrypted emails, here is my pgp key:
+=> https://keyserver.ubuntu.com/pks/lookup?op=vindex&fingerprint=on&exact=on&search=0xB174678027D03590032BE53FD236D5176EC2B0C2 D236D5176EC2B0C2
+
+All emails from me will be signed with the above key.
+
+## References
+=> https://gemini.circumlunar.space/ What is Gemini
+

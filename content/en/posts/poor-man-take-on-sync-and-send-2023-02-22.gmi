@@ -1,0 +1,61 @@
+# Poor Man's Take on Rust's Sync and Send
+
+Today I refactored a rust project, which involves using a type for rocket's(https://rocket.rs) managed state(https://rocket.rs/v0.5-rc/guide/state/#managed-state). The underlying database behind the type is sqlite via rusqlite crate. Before the refactoring, a database file path was used as the managed state to share database access between rocket handlers. Use `String` as a managed state is simple and straightforward - `String` is both `Send` and `Sync`, and does not need to consider lifetime issue. For the refactoring, I want to use a single object of the type as the shared state. It took me some time to solve all the complaints from rust compiler, mainly due to the type I want to use is not `Sync`.
+
+The type is like this:
+```
+pub trait BusinessModel {
+  // ...omitted
+}
+
+struct BackendStore {
+    conn: rusqlite::Connection,
+}
+
+
+impl BusinessModel for BackendStore {
+  // ...omitted
+}
+
+// The type I initially try to put in rocket::State:
+type Store = Box<dyn BusinessModel>;
+
+```
+
+This does not compile - `rusqlite::Connection` is not `Sync` because it has a field of type `RefCell`. So the root of `!Sync` is in the rusqlite crate. I'm not familiar with sqlite's concurrency model and my project does not use any concurrent ability of sqlite, but by common sense it should be **totally reasonable** to implement database connection as `!Sync`. So instead of replacing rusqlite with some other crates like `sqlx`(which provides a `Sync+Send` pool implementation), what firstly came to my head is to see if there is a way to make the `!Sync` type sync. There actually is one - `Mutex`.
+
+`Mutex` has the following implementation regards `Sync` and `Send`:
+```
+unsafe impl<T: ?Sized + Send> Send for Mutex<T> {}
+
+unsafe impl<T: ?Sized + Send> Sync for Mutex<T> {}
+```
+Which means that it wraps any type of `Send` into `Send + Sync` - which is just what I need. Change the type for rocket state to `Box<Mutex<dyn BusinessModel + Send>>`, everything works.
+
+But this makes me wondering for a while: why `Mutex` **can** wrap `!Sync` type into `Sync`? I went back to read the chapter of concurrency of The Book, and also the document of `Sync` trait - then I understood.
+
+Quote from the document of `Sync` trait:
+> The precise definition is: a type T is Sync if and only if &T is Send. In other words, if there is no possibility of undefined behavior (including data races) when passing &T references between threads.
+
+Maybe it's just me, but I often feel that formal definition is usually harder to really understand - like 'The precise definition...' of the above quoted document. The **"In other words"** part is essential: it does matter whether the type provides interior mutability or not, as long as it's impossible to cause issues when the immutable references are used in multiple threads, it is `Sync`.
+
+For `Mutex`, the only way the inside owned data can be accessed, is via the `lock` interface. Which means regardless of `Sync` or not the owned type is (whether or not the owned inner type like `RefCell` can be modified via a shared reference), there is always only one thread can access the inner data. This behavior is **exactly** what `Sync` trait means.
+
+But why `Mutex` requires inner type `T: Send` to make itself `Sync`? Let's *assume* the following code compiles (which doesn't):
+```
+let rc = Rc::new(1);
+
+let m = Arc::new(Mutex::new(Rc::clone(&rc)));
+
+thread::spawn(move || {
+    let guard = m.lock().unwrap();
+    let rc_inside = Rc::clone(&guard); // clone
+});
+
+let rc2 = Rc::clone(&rc); //clone
+```
+
+The reason of why `Rc` is `!Send` is well documented, makes it a suitable type for the demo here. These two `clone`s try to increase the same underlying reference counter which is non-atomic(which is why `Rc` itself is not`Send`). Now if `Mutex` wraps `!Send` type like `Rc` into a `Sync` type (which then the above code **will** compile),  *bad* behavior happened via **shared** reference of `Mutex`, which violates the definition of `Sync` trait.
+
+
+Anyway, this is what I get from today's refactoring, even maybe it's too obvious for more experienced rust programmers.
