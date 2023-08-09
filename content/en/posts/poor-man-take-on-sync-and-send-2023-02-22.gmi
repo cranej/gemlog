@@ -1,6 +1,6 @@
 # Poor Man's Take on Rust's Sync and Send
 
-Today I refactored a rust project, which involves using a type for rocket's(https://rocket.rs) managed state(https://rocket.rs/v0.5-rc/guide/state/#managed-state). The underlying database behind the type is sqlite via rusqlite crate. Before the refactoring, a database file path was used as the managed state to share database access between rocket handlers. Use `String` as a managed state is simple and straightforward - `String` is both `Send` and `Sync`, and does not need to consider lifetime issue. For the refactoring, I want to use a single object of the type as the shared state. It took me some time to solve all the complaints from rust compiler, mainly due to the type I want to use is not `Sync`.
+Today I refactored a rust project, which involves using a type for rocket's managed state(https://rocket.rs/v0.5-rc/guide/state/#managed-state). The underlying database behind the type is sqlite via rusqlite crate. Before the refactoring, a database file path was used as the managed state to share database access between rocket handlers. Use `String` as a managed state is simple and straightforward - `String` is both `Send` and `Sync`, and does not need to consider lifetime issue. For the refactoring, I want to use a single object of the type as the shared state. It took me some time to solve all the complaints from rust compiler, mainly due to the type I want to use is not `Sync`.
 
 The type is like this:
 ```

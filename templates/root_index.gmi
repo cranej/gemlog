@@ -1,7 +1,7 @@
 {{ .Content -}}
 # cranej's Blog
 
-I'm a programmer, a reader, and a pipe smoker(which is not good). Hopefully I can write more blogs from now on. But I don't think I can based on my prior experiences...:)
+I'm a programmer, a reader, and a pipe smoker(which is not good). Hopefully I can write more blogs from now on.
 
 This site is published both as Gemini capsule and web site. You can read this blog on Gemini:
 => gemini://cranejin.com
