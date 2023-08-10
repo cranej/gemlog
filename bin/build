@@ -1,5 +1,5 @@
 #!/usr/bin/bash
 
 ./bin/gssg
-cp nongmi/* public
+cp -a nongmi/. public
 ./bin/gem2site public public_html
