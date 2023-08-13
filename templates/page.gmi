@@ -1,5 +1,7 @@
 {{ .Content }}
 {{ if .Date.IsZero -}}{{ else }}
 ----
-Published on {{ .Date.Format "2006-01-02" }}
+Published on {{ .Date.Format "2006-01-02" }} by cranej
+The content for this site is licensed under:
+=>https://creativecommons.org/licenses/by-sa/4.0/ CC-BY-SA
 {{ end -}}
