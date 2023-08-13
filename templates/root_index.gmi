@@ -25,10 +25,9 @@ A few tools I wrote mainly for self use, but maybe also useful for others.
 ## Contact
 You can reach me via email:
 => mailto:crane@cranejin.com crane@cranejin.com
-=> mailto:crane.jin@outlook.com crane.jin@outlook.com
 
 If you prefer to send encrypted emails, here is my pgp key:
-=> https://keyserver.ubuntu.com/pks/lookup?op=vindex&fingerprint=on&exact=on&search=0xB174678027D03590032BE53FD236D5176EC2B0C2 D236D5176EC2B0C2
+=> http://pgp.surf.nl/pks/lookup?search=B174678027D03590032BE53FD236D5176EC2B0C2&fingerprint=on&op=index D236D5176EC2B0C2
 
 All emails from me will be signed with the above key.
 
