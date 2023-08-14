@@ -1,0 +1,7 @@
+# Quick fixes...or "fixes"?
+
+## 2023-08-14
+* Struggled for a while but still can't make emoji works on urxvt. Switched to st[1], everything just works out of box. Problem solved.
+* Gemini client amfora[2] keeps showing strange characters, and can't show some preformatted text correctly. Export LC_CTYPE=en_US.UTF-8, problem solved.
+=> http://st.suckless.org/ [1] st from suckless
+=> https://github.com/makew0rld/amfora [2] amfora
