@@ -7,7 +7,7 @@ Simple and intuitive to use in console:
 curl wttr.in/shanghai+pudong
 ```
 
-Beautiful output: (Note tha amfora seems failed to show the preformatted output correctly, if you use amfora as your client, try the above command in your terminal please.)
+Beautiful output: (Be sure to set LC_CTYPE to en_US.UTF-8 if you are using a terminal based gemini client like amfora)
 ```
 Weather report: shanghai+pudong
 
