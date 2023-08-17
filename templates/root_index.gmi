@@ -1,7 +1,7 @@
 {{ .Content -}}
 # cranej's Blog
 
-I'm a programmer, a reader, and a pipe smoker(which is not good). Hopefully I can write more blogs from now on.
+I'm a programmer, a reader, and a pipe smoker(which is not good). Hopefully I can write more from now on.
 
 This site is published both as Gemini capsule and web site. You can read this blog on Gemini:
 => gemini://cranejin.com
@@ -19,7 +19,7 @@ My native language is Chinese. I'm fluent in English. I'm learning Japanese. So 
 => /zh/ 中文内容 ({{- $zhPostsLen -}})
 
 ## Tinylog
-=> /quick-fix.gmi Quick fixes of various tiny problems
+=> /quick-fix.gmi Quick "fixes" of various tiny problems
 
 ## Code
 A few tools I wrote mainly for self use, but maybe also useful for others.
