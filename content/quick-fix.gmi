@@ -1,5 +1,12 @@
 # Quick fixes...or "fixes"?
 
+## 2023-08-17
+Google services are strictly blocked in my country. Many sites I want to visit load JavaScript from ajax.googleapi.com, and more worse, many of these sites put the <script src> tag at the begining of their html pages(which is a bad practice in web developing), then every time I visit such a page, I have to wait until the ajax.googleapi.com request to timeout before I can see any content of the pages.
+
+I'm not blaming owners of these web sites, I'm very clear that the only one should be cursed on is the one who blocked many web services. I'm just curious - why on earth content focused sites need JavaScript at the first place? And even if they do want JavaScript for their sites, do they really need a "library" like jQuery in 2023?
+
+Anyway, I blocked all request to ajax.googleapi.com in my browser, so the requests to them fails immediately. And yes I didn't see any problem on these pages without 'jQuery'. Problem solved.
+
 ## 2023-08-14
 * Struggled for a while but still can't make emoji works on urxvt. Switched to st[1], everything just works out of box. Problem solved.
 * Gemini client amfora[2] keeps showing strange characters, and can't show some preformatted text correctly. Export LC_CTYPE=en_US.UTF-8, problem solved.
