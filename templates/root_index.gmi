@@ -18,7 +18,7 @@ My native language is Chinese. I'm fluent in English. I'm learning Japanese. So 
 => /jp/ 日本語での内容 ({{- $jpPostsLen -}})
 => /zh/ 中文内容 ({{- $zhPostsLen -}})
 
-## Shortlog
+## Tinylog
 => /quick-fix.gmi Quick fixes of various tiny problems
 
 ## Code
