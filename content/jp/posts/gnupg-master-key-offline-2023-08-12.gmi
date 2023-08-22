@@ -82,7 +82,6 @@ $ rm -rf ~/gpgtmp
 
 更に、次のスクリプトを利用したら、とても便利だと思います：
 ```
-
 #!/bin/bash
 
 # The UUID of your USB stick
@@ -90,7 +89,7 @@ UUID=FB6A-B7E4
 
 # The pathname to the file containing your private keys
 # on that stick
-KEYFILE=private-keys.asc
+KEYFILE=crane-key.asc
 
 # Identify the device file corresponding to your USB stick
 device=$(/sbin/findfs UUID=$UUID)
@@ -108,10 +107,13 @@ if [ -n "$device" ]; then
     # Unmount the stick
     udisksctl unmount --block-device $device
 
+    trustdbname=${GNUPGHOME:-$HOME/.gnupg}/trustdb.gpg
     # Launch GnuPG from the temporary directory,
     # with the default public keyring
     # and with any arguments given to us on the command line
-    gpg2 --homedir $tmpdir --no-default-keyring --keyring ${GNUPGHOME:-$HOME/.gnupg}/pubring.kbx $@
+    gpg2 --homedir $tmpdir --no-default-keyring --keyring ${GNUPGHOME:-$HOME/.gnupg}/pubring.kbx \
+		--trustdb-name "$trustdbname" \
+		$@
 
     # Cleaning up
     [ -f $tmpdir/S.gpg-agent ] && gpg-connect-agent --homedir $tmpdir KILLAGENT /bye
