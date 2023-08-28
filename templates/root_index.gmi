@@ -19,7 +19,8 @@ My native language is Chinese. I'm fluent in English. I'm learning Japanese. So 
 => /zh/ 中文内容 ({{- $zhPostsLen -}})
 
 ## Tinylog
-=> /quick-fix.gmi Quick "fixes" of various tiny problems
+{{ $childrenCurrent := index .Children "." -}}
+=> /quick-fix.gmi Quick "fixes" of various tiny problems (Last updated: {{ (index $childrenCurrent 0).Date.Format "2006-01-02" -}})
 
 ## Code
 A few tools I wrote mainly for self use, but maybe also useful for others.
