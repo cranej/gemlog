@@ -20,7 +20,8 @@ My native language is Chinese. I'm fluent in English. I'm learning Japanese. So 
 
 ## Tinylog
 {{ $childrenCurrent := index .Children "." -}}
-=> /quick-fix.gmi Quick "fixes" of various tiny problems (Last updated: {{ (index $childrenCurrent 0).Date.Format "2006-01-02" -}})
+=> /quick-fix.gmi Quick "fixes" of various tiny problems
+Last updated: {{ (index $childrenCurrent 0).Date.Format "2006-01-02" }}
 
 ## Code
 A few tools I wrote mainly for self use, but maybe also useful for others.
