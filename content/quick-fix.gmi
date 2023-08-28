@@ -1,5 +1,9 @@
 # Quick fixes...or "fixes"?
 
+## 2023-08-28 device descriptor read/64, error -71
+Just encountered a wired problem with my laptop running Arch Linux - after I tried to disconnect my suddenly stopped working mouse with 'disconnect' command in bluetoothctl, the entire bluetooth device stopped working with error 'device descriptor read/64, error -71' in dmesg output. Rebooting couldn't resolve the issue. After a lot searches on web, finally I found a 'wired' solution[1]: power off the laptop entirely with 'shutdown -h now'; unplug all cables like power/HDMI, etc.; wait for a few seconds; power on and plug cables back...which worked! Problem solved...in a way I don't understand.
+=> https://askubuntu.com/questions/1119239/bluetooth-problem-continuous-turn-on-off-every-23-seconds [1] solution on askubuntu.com
+
 ## 2023-08-17
 Google services are strictly blocked in my country. Many sites I want to visit load JavaScript from ajax.googleapi.com, and more worse, many of these sites put the <script src> tag at the begining of their html pages(which is a bad practice in web developing), then every time I visit such a page, I have to wait until the ajax.googleapi.com request to timeout before I can see any content of the pages.
 
