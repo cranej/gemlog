@@ -11,12 +11,26 @@ or read on the web:
 
 ## Posts
 My native language is Chinese. I'm fluent in English. I'm learning Japanese. So there will be contents written in these three languages.
-{{ $enPostsLen := len (index .Children "en/posts") -}}
-{{ $zhPostsLen := len (index .Children "zh/posts") -}}
-{{ $jpPostsLen := len (index .Children "jp/posts") -}}
-=> /en/ Contents in English ({{- $enPostsLen -}})
-=> /jp/ 日本語での内容 ({{- $jpPostsLen -}})
-=> /zh/ 中文内容 ({{- $zhPostsLen -}})
+{{ with (index .Children "en/posts") }}
+{{- if (len .) -}}
+=> /en/ Contents in English ({{ len . }})
+Last updated: {{ (index . 0).Date.Format "2006-01-02" }}
+{{- end }}
+{{- end }}
+
+{{ with (index .Children "jp/posts") }}
+{{- if (len .) -}}
+=> /jp/ 日本語での内容 ({{ len . }})
+Last updated: {{ (index . 0).Date.Format "2006-01-02" }}
+{{- end }}
+{{- end }}
+
+{{ with (index .Children "zh/posts") }}
+{{- if (len .) -}}
+=> /zh/ 中文内容 ({{ len . }})
+Last updated: {{ (index . 0).Date.Format "2006-01-02" }}
+{{- end }}
+{{- end }}
 
 ## Tinylog
 {{ $childrenCurrent := index .Children "." -}}
