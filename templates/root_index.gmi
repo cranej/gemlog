@@ -35,7 +35,9 @@ Last updated: {{ (index . 0).Date.Format "2006-01-02" }}
 ## Tinylog
 {{ $childrenCurrent := index .Children "." -}}
 => /quick-fix.gmi Quick "fixes" of various tiny problems
-Last updated: {{ (index $childrenCurrent 0).Date.Format "2006-01-02" }}
+Last updated: {{ (findPage $childrenCurrent "quick-fix.gmi").Date.Format "2006-01-02" }}
+=> /stupidities.gmi Stupid or ugly things I think
+Last updated: {{ (findPage $childrenCurrent "stupidities.gmi").Date.Format "2006-01-02" }}
 
 ## Code
 A few tools I wrote mainly for self use, but maybe also useful for others.
