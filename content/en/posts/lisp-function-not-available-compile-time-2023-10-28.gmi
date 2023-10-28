@@ -1,0 +1,50 @@
+# Common Lisp:  It is defined earlier in the file but is not available at compile-time
+
+Experienced lisp programmers know the cause on the first glance of the error message. But someone who is just learning lisp like me might be confused. I tried google search the error first, but got nothing. So after I figured out it by myself, I thought it might be worth to write it down for somebody's reference in the future.
+
+## The issue
+Put the following in 'test.lisp' and compile it:
+```
+(defun get-bindings ()
+  `((a 1) (b 2)))
+
+(defmacro testm ()
+  `(let ,(get-bindings)
+     (+ a b)))
+
+(testm)
+
+```
+There will be an error :
+```
+ERROR: (during macroexpansion of (TESTM))
+The function COMMON-LISP-USER::GET-BINDINGS is undefined.
+It is defined earlier in the file but is not available at compile-time.
+```
+Note that the exact wording of the error might be different per lisp implementations.
+
+The code compiles fine if the top-level form '(testm)' is removed. The problem here is that:
+* '(testm)' as a top-level macro form, will be expanded during the compiling process
+* ',(get-bindings)' evaluates the form (followed by the comma) at macro expansion time which is at compile time
+* but 'get-bindings' won't be available at compile-time - as per the spec[1][2], 'defun' does not make the function available at compile-time. It's only available after you load it - that's the time when the side effects of 'defun' got performed.
+
+## Possible solutions:
+1. You can put all utility functions called during macro expansion time inside a '(eval-when (:compile-toplevel :load-toplevel :execute))' form. But this does not sound ideal - it somehow feels tricky, and it's easy to forget to include some utility functions.
+
+2. Use system (asdf - but can also be other build systems which I don't know) to organize your code: put the macro definitions and all utility functions used by them in a separate file, and make sure all the files using these macros depend on it. For example:
+```
+(defsystem "hello-lisp"
+  :description "hello-lisp: a sample Lisp system."
+  :version "0.0.1"
+  :author "Joe User <joe@example.com>"
+  :licence "Public Domain"
+  :depends-on ("optima.ppcre" "command-line-arguments")
+  :components ((:file "packages")
+               (:file "macros" :depends-on ("packages"))
+               (:file "hello" :depends-on ("macros"))))
+```
+You need to define system anyway unless you are just experimenting some random code. In that case you can just evaluate all utility functions first.
+
+=> https://novaspec.org/cl/f_defun [1] defun
+=> https://novaspec.org/cl/3_2_Compilation#sec_3_2_3_1 [2] Processing of Top Level Forms
+
