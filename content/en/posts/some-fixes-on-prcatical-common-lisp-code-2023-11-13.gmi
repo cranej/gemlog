@@ -1,0 +1,251 @@
+# Following examples code of Practical Common Lisp book
+
+Have being learning Common Lisp for about two months following Steve's excellent article "A Road to Common Lisp"[1], I just finished the second book "Practical Common Lisp"[2].
+
+When reading Practical Common Lisp, I try my best to follow every example in the book. There were some difficulties I have faced which might be worth to write down:
+* I'm not a native English speaker, so the data I used to try the code examples includes a lot of Unicode data. The examples code need some modifications to make them work with Unicode.
+* AllgoServe library plays a significant role in the examples. My lisp is SBCL, so I have to use PortableAllegroServe - which is obsolete, unmaintained for a long time in my opinion (The book was written about 18 years ago - library status could change). Some extra work has to be done to make the examples work as expected.
+* There seems some bugs in the examples code, but I'm no Common Lisp expert, so I might be wrong. I'm going to write them down here anyway.
+
+## Unicode support issues
+
+1. In chapter 28, function 'make-icy-metadata' does not work on title with unicode:
+```
+(defun make-icy-metadata (title)
+  (let* ((text (format nil "StreamTitle='~a';" (substitute #\Space #\' title)))
+         (blocks (ceiling (length text) 16))
+         (buffer (make-array (1+ (* blocks 16))
+                             :element-type '(unsigned-byte 8)
+                             :initial-element 0)))
+    (setf (aref buffer 0) blocks)
+    (loop
+       for char across text
+       for i from 1
+       do (setf (aref buffer i) (char-code char)))
+    buffer))
+```
+The footer note 9 says:
+> This function assumes, as has other code you've written, that your Lisp implementation's internal character encoding is ASCII or a superset of ASCII, so you can use CHAR-CODE to translate Lisp CHARACTER objects to bytes of ASCII data.
+
+But the code does not work with unicode even under such assumption - this code fails on SBCL while SBCl uses utf-8 as internal character encoding, which is a superset of ASCII. Function `char-code` simply gives the integer representation of a char, with a superset of ASCII, the integer goes bigger than 255, which can not be wrote into a single byte.
+
+The fix is simple:
+
+```
+(defun make-icy-metadata (title)
+  (let* ((text (format nil "StreamTitle='~a';" (substitute #\Space #\' title)))
+         (text-buffer (string-to-utf-8-bytes text)))
+    (multiple-value-bind (blocks padding) (ceiling (length text-buffer) 16)
+      (concatenate 'vector
+                   (vector blocks)
+                   text-buffer
+                   (make-array (abs padding)
+                               :element-type '(unsigned-byte 8)
+                               :initial-element 0)))))
+```
+Function 'string-to-utf-8-bytes' is from library 'trivial-utf-8' which can be installed from quicklisp. Or you can just use 'sb-ext:string-to-octets' in SBCL if you don't care about portability.
+
+2. In chapter 29, function 'obj->base64' and 'base64->obj' are defined using AllgoServe's base64-encode and base64-decode, which do not work on unicode data at least in PortableAllegroServe's implementation.
+
+These functions does not throw errors on utf-8 data, they just give out corrupt output. So if you run the mp3browser implementation, related functionalities behave strangely rather than just fail. But once you find the root cause, fixing them is easy:
+```
+(defun string->base64-string (string)
+  (with-output-to-string (out)
+    (s-base64:encode-base64-bytes
+      (sb-ext:string-to-octets string)
+      out)))
+(defun base64-string->string (b64str)
+  (with-input-from-string (in b64str)
+    (sb-ext:octets-to-string
+      (s-base64:decode-base64-bytes in))))
+
+(defun obj->base64 (obj)
+  (with-safe-io-synax (string->base64-string (write-to-string obj))))
+
+(defun base64->obj (string)
+  (ignore-errors
+    (with-safe-io-synax (read-from-string (base64-string->string string)))))
+```
+Again, you can install 's-base64' library from quicklisp.
+
+3. In chapter 28, the function 'urlencode' is defined using AllgoServe's unexported function 'net.aserve::encode-form-urlencoded', which does not work on unicode data at least in PortableAllegroServe's implementation.
+
+This one requires more efforts to fix. Just fix the implementation of 'urlencode' like this:
+```
+(defun urlencode (str)
+  (do-urlencode:urlencode (format nil "~a" str)))
+```
+is not sufficient.
+
+Before you can retrieve query parameter value and form data in your http handlers, PortableAllegroServe processes raw query strings and form data internally with function 'form-urlencode-to-query'. This function cannot correctly decode data encoded by your own implementation of 'urlencode'.
+
+The fix is, instead of querying parameters from PortableAllegroServe parsed data, I roll my own implementation to parse raw query strings and form data from raw request, and use them in 'define-url-function' macro (from chapter 26):
+
+```
+;; Chapter 26 define-url-function
+(defmacro define-url-function (name (request &rest params) &body body)
+  (with-gensyms (entity queries)
+    (let ((params (mapcar #'normalize-param params)))
+      `(progn
+         (defun ,name (,request ,entity)
+           (with-http-response (,request ,entity :content-type "text/html")
+;; read parameters from the parsed and decoded data from ourself's implementation
+             (let* ((,queries (queries ,request))
+                    ,@(param-bindings name request queries params))
+               ,@(set-cookies-code name request params)
+               (with-http-body (,request ,entity)
+                 (with-html-output ((request-reply-stream ,request))
+                   (html ,@body))))))
+         (publish :path ,(format nil "/~(~a~)" name) :function ',name)))))
+
+(defun param-bindings (function-name request queries params)
+  (loop for param in params
+     collect (param-binding function-name request queries param)))
+
+(defun param-binding (function-name request queries param)
+  (destructuring-bind (name type &optional default sticky) param
+    (let ((query-name (symbol->query-name name))
+          (cookie-name (symbol->cookie-name function-name name sticky)))
+      `(,name (or
+               (string->type ',type (cdr (assoc ,query-name ,queries :test #'string= )))
+               ,@(if cookie-name
+                     (list `(string->type ',type (get-cookie-value ,request ,cookie-name))))
+               ,default)))))
+
+(defun queries (request)
+  (let* ((raw-request (request-raw-request request))
+         (raw-query-string
+           (and (position #\? raw-request)
+                (subseq raw-request
+                        (1+ (position #\? raw-request))
+                        (position #\Space raw-request :from-end t))))
+         (parse-post-p
+           (and (member (request-method request) '(:post :put))
+                (search "application/x-www-form-urlencoded"
+                        (header-slot-value request :content-type))))
+         (res (parse-queries raw-query-string)))
+    (if parse-post-p
+        (nconc res (parse-queries (get-request-body request)))
+        res)))
+
+;; Perform urldecode here
+(defun parse-pair (pair)
+  (let ((pos (position #\= pair)))
+    (when pos
+      (let ((field (subseq pair 0 pos))
+            (value (subseq pair (1+ pos))))
+        (cons (do-urlencode:urldecode field)
+              (do-urlencode:urldecode value))))))
+
+(defun parse-queries (query-string)
+  (let* ((qlen (length query-string)))
+    (loop for start = 0
+          then (and end (1+ end))
+          and end = (position #\& query-string)
+          then (position #\& query-string :start (if end (1+ end) qlen))
+          while start
+          collect (parse-pair (subseq query-string start end)) into pairs
+          finally (return (delete-if #'null pairs)))))
+
+```
+
+## PortableAllegroServe issues
+
+Note none of the "fixes" below should be considered as real fixes, they are just quick workarounds to get the examples code run without significant efforts like replacing the web server library to another one.
+
+1. The 'buffered-bivalent-output-stream' (in file acl-compat/lw-buffering.lisp) has a malformed implementation of 'stream-write-char' generic function:
+```
+(defmethod stream-write-char ((stream buffered-bivalent-output-stream) character)
+  (stream-write-byte stream (char-code character)))
+```
+Again this implementation assumes character are always ASCII. This can be fixed as:
+```
+(defmethod stream-write-char ((stream buffered-bivalent-output-stream) character)
+  (loop for byte across (sb-ext:string-to-octets (string character))
+    do (stream-write-byte stream byte)))
+```
+
+2. There is no way to catch conditions like 'remote socket closed' inside your handler function, you have to catch it in higher level code. The reason is that in PortableAllegroServe's 'process-connetion' function (in file aserve/main.cl), there are several writing operations on the remote socket **after** the call to '(handle-request req)':
+```
+(defun process-connection (sock)
+	;;...code elided...
+
+		  (handle-request req)
+		  (setf (request-reply-date req) (get-universal-time))
+
+		  (force-output-noblock (request-socket req))
+
+		  (setf (request-reply-date req) (get-universal-time))
+
+		  (log-request req)
+
+		  (setq *worker-request* nil)
+		  (free-req-header-block req)
+
+		  (let ((sock (request-socket req)))
+		    (if* (member :keep-alive
+				 (request-reply-strategy req)
+				 :test #'eq)
+		       then ; continue to use it
+			    (debug-format :info "request over, keep socket alive~%")
+			    (force-output-noblock sock)
+			    (setf (car chars-seen) nil)  ; for next use
+		       else (return))))))
+	;;...code elided...)
+```
+
+If remote socket is closed, these writing operations throws errors outside of your handler function. So for situation like chapter 28's 'play-songs' implementation:
+> In addition to handling the looping, play-songs also provides a HANDLER-CASE to trap the error that will be signaled when the MP3 client disconnects from the server and one of the writes to the socket, down in play-current, fails. Since the HANDLER-CASE is outside the LOOP, handling the error will break out of the loop, allowing play-songs to return
+
+Once MP3 client disconnects from the server, the handler-case form can't handle the error as expected. Here I just modified PortableAllegroServe source code, wrapped all writing operations after handle-request call inside 'ignore-errors' forms.
+
+## Bugs in chapter 28 - A shoutcast server
+
+1. Function 'play-songs':
+```
+(defun play-songs (stream song-source metadata-interval)
+  (handler-case
+    (loop
+      for next-metadata = metadata-interval
+      then (play-current
+             stream
+             song-source
+             next-metadata
+             metadata-interval)
+      ;; while next-metadata
+      )
+    (error (e) (format *trace-output* "Caught error in play-songs: ~a" e))))
+```
+
+The while condition in the loop does not make sense - next-metadata will never be nil unless metadata-interval is nil. Metadata-interval is nil when client does not want metadata, in that case with this while condition play-songs will stop playing after the first song finished.
+
+2. Function 'play-current' opened mp3 file in character mode, which cause the following 'read-byte' calls fail.
+
+3. Function 'play-current' skips id3 tag with '(file-position mp3 (id3-size song))' before sending the actual mp3 bytes. If you look into the id3-size function, it reads the size from id3-tag object's size slot. Per id3v2.3 & 2.4 spec, the size value read from id3 tag header, does not include the header itself. Here we need to skip the total size of id3 tag.
+
+This issue can be fixed by define a generic function in the id3 code:
+```
+(defgeneric total-size (tag)
+  (:documentation "Total size of tag, including header and footer(id3v2.4.0 only)."))
+
+(defmethod total-size ((tag id3-tag))
+  (+ (size tag) 10))
+
+(defmethod total-size ((tag id3v2.4-tag))
+  (let ((flags (flags tag)))
+    (+ (size tag)
+       10
+       (if (footer-p flags) 10 0))))
+```
+
+## Conclusion
+As my MP3 files are mostly tagged in id3v2.4, I also extended the id3 parser from chapter 25 to support id3v2.4 tags[3].
+
+With these fixes/workarounds/extensions, I finally successfully run a mp3browser and shoutcast server on my computer, and play the stream via VLC player on my iPhone.
+
+---------------------
+References:
+=>https://stevelosh.com/blog/2018/08/a-road-to-common-lisp/ [1] A Road to Common Lisp
+=>https://gigamonkeys.com/book/ [2] Practical Common Lisp
+=>https://codeberg.org/cranej/id3parser [3] Id3 parser with v2.4 support
+

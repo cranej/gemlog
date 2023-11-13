@@ -1,5 +1,12 @@
 # Quick fixes...or "fixes"?
 
+## 2023-11-13 vim gutentags plugin does not work correctly on Alpine Linux
+The specific problem I encountered is, after saving a file, contents of 'tags' file are replaced entirely by tags information of the just saved file, all tags data of other files in the same project lost. The expected behaviours should be 'updating', not 'overwriting'.
+
+Turn on 'g:gutentags_define_advanced_commands' and turn on tracing via ':GutentagsToggleTrace' command, saving any file you can see gutentags reports the error 'grep invalid option --text'.
+
+The default 'grep' program in Alpine Linux is not Gnu grep, and dost not support '--text' option. 'doas apk add grep' to install Gnu grep, problem solved.
+
 ## 2023-08-28 device descriptor read/64, error -71
 Just encountered a wired problem with my laptop running Arch Linux - after I tried to disconnect my suddenly stopped working mouse with 'disconnect' command in bluetoothctl, the entire bluetooth device stopped working with error 'device descriptor read/64, error -71' in dmesg output. Rebooting couldn't resolve the issue. After a lot searches on web, finally I found a 'wired' solution[1]: power off the laptop entirely with 'shutdown -h now'; unplug all cables like power/HDMI, etc.; wait for a few seconds; power on and plug cables back...which worked! Problem solved...in a way I don't understand.
 => https://askubuntu.com/questions/1119239/bluetooth-problem-continuous-turn-on-off-every-23-seconds [1] solution on askubuntu.com
