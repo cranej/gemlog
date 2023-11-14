@@ -3,45 +3,39 @@
 
 I'm a programmer, a reader, and a pipe smoker(which is not good). Hopefully I can write more from now on.
 
-This site is published both as Gemini capsule and web site. You can read this blog on Gemini:
-=> gemini://cranejin.com
-
-or read on the web:
-=> https://cranejin.com
-
 ## Posts
-My native language is Chinese. I'm fluent in English. I'm learning Japanese. So there will be contents written in these three languages.
+I write mainly in English, sometimes in Japanese or Chinese.
+
 {{ with (index .Children "en/posts") }}
 {{- if (len .) -}}
 => /en/ Contents in English ({{ len . }})
-Last updated: {{ (index . 0).Date.Format "2006-01-02" }}
+Last updated on {{ (index . 0).Date.Format "2006-01-02" }}
 {{- end }}
 {{- end }}
-
 {{ with (index .Children "jp/posts") }}
 {{- if (len .) -}}
 => /jp/ 日本語での内容 ({{ len . }})
-Last updated: {{ (index . 0).Date.Format "2006-01-02" }}
+Last updated on {{ (index . 0).Date.Format "2006-01-02" }}
 {{- end }}
 {{- end }}
-
 {{ with (index .Children "zh/posts") }}
 {{- if (len .) -}}
 => /zh/ 中文内容 ({{ len . }})
-Last updated: {{ (index . 0).Date.Format "2006-01-02" }}
+Last updated on {{ (index . 0).Date.Format "2006-01-02" }}
 {{- end }}
 {{- end }}
 
 ## Tinylog
 {{ $childrenCurrent := index .Children "." -}}
 => /quick-fix.gmi Quick "fixes" of various tiny problems
-Last updated: {{ (findPage $childrenCurrent "quick-fix.gmi").Date.Format "2006-01-02" }}
+Last updated on {{ (findPage $childrenCurrent "quick-fix.gmi").Date.Format "2006-01-02" }}
 => /stupidities.gmi Stupid or ugly things I think
-Last updated: {{ (findPage $childrenCurrent "stupidities.gmi").Date.Format "2006-01-02" }}
+Last updated on {{ (findPage $childrenCurrent "stupidities.gmi").Date.Format "2006-01-02" }}
 
 ## Code
 A few tools I wrote mainly for self use, but maybe also useful for others.
-=> https://github.com/cranej github.com/cranej
+=> https://github.com/cranej github
+=> https://codeberg.org/cranej/ codeberg
 
 ## Contact
 You can reach me via email:
@@ -52,6 +46,14 @@ If you prefer to send encrypted emails, here is my pgp key:
 
 All emails from me will be signed with the above key.
 
-## References
-=> https://gemini.circumlunar.space/ What is Gemini
+## Misc.
+This site is published both as a Gemini capsule and a web site. You can read either on Gemini:
+=> gemini://cranejin.com
+
+or on the web:
+=> https://cranejin.com
+
+
+
+
 
