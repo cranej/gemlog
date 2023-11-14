@@ -10,7 +10,7 @@ When reading Practical Common Lisp, I try my best to follow every example in the
 ## Unicode support issues
 
 1. In chapter 28, function 'make-icy-metadata' does not work on title with unicode:
-```
+```common lisp
 (defun make-icy-metadata (title)
   (let* ((text (format nil "StreamTitle='~a';" (substitute #\Space #\' title)))
          (blocks (ceiling (length text) 16))
@@ -31,7 +31,7 @@ But the code does not work with unicode even under such assumption - this code f
 
 The fix is simple:
 
-```
+```common lisp
 (defun make-icy-metadata (title)
   (let* ((text (format nil "StreamTitle='~a';" (substitute #\Space #\' title)))
          (text-buffer (string-to-utf-8-bytes text)))
@@ -48,7 +48,7 @@ Function 'string-to-utf-8-bytes' is from library 'trivial-utf-8' which can be in
 2. In chapter 29, function 'obj->base64' and 'base64->obj' are defined using AllgoServe's base64-encode and base64-decode, which do not work on unicode data at least in PortableAllegroServe's implementation.
 
 These functions does not throw errors on utf-8 data, they just give out corrupt output. So if you run the mp3browser implementation, related functionalities behave strangely rather than just fail. But once you find the root cause, fixing them is easy:
-```
+```common lisp
 (defun string->base64-string (string)
   (with-output-to-string (out)
     (s-base64:encode-base64-bytes
@@ -71,7 +71,7 @@ Again, you can install 's-base64' library from quicklisp.
 3. In chapter 28, the function 'urlencode' is defined using AllgoServe's unexported function 'net.aserve::encode-form-urlencoded', which does not work on unicode data at least in PortableAllegroServe's implementation.
 
 This one requires more efforts to fix. Just fix the implementation of 'urlencode' like this:
-```
+```common lisp
 (defun urlencode (str)
   (do-urlencode:urlencode (format nil "~a" str)))
 ```
@@ -81,7 +81,7 @@ Before you can retrieve query parameter value and form data in your http handler
 
 The fix is, instead of querying parameters from PortableAllegroServe parsed data, I roll my own implementation to parse raw query strings and form data from raw request, and use them in 'define-url-function' macro (from chapter 26):
 
-```
+```common lisp
 ;; Chapter 26 define-url-function
 (defmacro define-url-function (name (request &rest params) &body body)
   (with-gensyms (entity queries)
@@ -154,44 +154,44 @@ The fix is, instead of querying parameters from PortableAllegroServe parsed data
 Note none of the "fixes" below should be considered as real fixes, they are just quick workarounds to get the examples code run without significant efforts like replacing the web server library to another one.
 
 1. The 'buffered-bivalent-output-stream' (in file acl-compat/lw-buffering.lisp) has a malformed implementation of 'stream-write-char' generic function:
-```
+```common lisp
 (defmethod stream-write-char ((stream buffered-bivalent-output-stream) character)
   (stream-write-byte stream (char-code character)))
 ```
 Again this implementation assumes character are always ASCII. This can be fixed as:
-```
+```common lisp
 (defmethod stream-write-char ((stream buffered-bivalent-output-stream) character)
   (loop for byte across (sb-ext:string-to-octets (string character))
     do (stream-write-byte stream byte)))
 ```
 
 2. There is no way to catch conditions like 'remote socket closed' inside your handler function, you have to catch it in higher level code. The reason is that in PortableAllegroServe's 'process-connetion' function (in file aserve/main.cl), there are several writing operations on the remote socket **after** the call to '(handle-request req)':
-```
+```common lisp
 (defun process-connection (sock)
-	;;...code elided...
+  ;;...code elided...
 
-		  (handle-request req)
-		  (setf (request-reply-date req) (get-universal-time))
+  (handle-request req)
+  (setf (request-reply-date req) (get-universal-time))
 
-		  (force-output-noblock (request-socket req))
+  (force-output-noblock (request-socket req))
 
-		  (setf (request-reply-date req) (get-universal-time))
+  (setf (request-reply-date req) (get-universal-time))
 
-		  (log-request req)
+  (log-request req)
 
-		  (setq *worker-request* nil)
-		  (free-req-header-block req)
+  (setq *worker-request* nil)
+  (free-req-header-block req)
 
-		  (let ((sock (request-socket req)))
-		    (if* (member :keep-alive
-				 (request-reply-strategy req)
-				 :test #'eq)
-		       then ; continue to use it
-			    (debug-format :info "request over, keep socket alive~%")
-			    (force-output-noblock sock)
-			    (setf (car chars-seen) nil)  ; for next use
-		       else (return))))))
-	;;...code elided...)
+  (let ((sock (request-socket req)))
+    (if* (member :keep-alive
+		 (request-reply-strategy req)
+		 :test #'eq)
+       then ; continue to use it
+	    (debug-format :info "request over, keep socket alive~%")
+	    (force-output-noblock sock)
+	    (setf (car chars-seen) nil)  ; for next use
+       else (return))))))
+  ;;...code elided...)
 ```
 
 If remote socket is closed, these writing operations throws errors outside of your handler function. So for situation like chapter 28's 'play-songs' implementation:
@@ -202,7 +202,7 @@ Once MP3 client disconnects from the server, the handler-case form can't handle 
 ## Bugs in chapter 28 - A shoutcast server
 
 1. Function 'play-songs':
-```
+```common lisp
 (defun play-songs (stream song-source metadata-interval)
   (handler-case
     (loop
@@ -224,7 +224,7 @@ The while condition in the loop does not make sense - next-metadata will never b
 3. Function 'play-current' skips id3 tag with '(file-position mp3 (id3-size song))' before sending the actual mp3 bytes. If you look into the id3-size function, it reads the size from id3-tag object's size slot. Per id3v2.3 & 2.4 spec, the size value read from id3 tag header, does not include the header itself. Here we need to skip the total size of id3 tag.
 
 This issue can be fixed by define a generic function in the id3 code:
-```
+```common lisp
 (defgeneric total-size (tag)
   (:documentation "Total size of tag, including header and footer(id3v2.4.0 only)."))
 

@@ -4,7 +4,7 @@ Experienced lisp programmers know the cause on the first glance of the error mes
 
 ## The issue
 Put the following in 'test.lisp' and compile it:
-```
+```common lisp
 (defun get-bindings ()
   `((a 1) (b 2)))
 
@@ -32,7 +32,7 @@ The code compiles fine if the top-level form '(testm)' is removed. The problem h
 1. You can put all utility functions called during macro expansion time inside a '(eval-when (:compile-toplevel :load-toplevel :execute))' form. But this does not sound ideal - it somehow feels tricky, and it's easy to forget to include some utility functions.
 
 2. Use system (asdf - but can also be other build systems which I don't know) to organize your code: put the macro definitions and all utility functions used by them in a separate file, and make sure all the files using these macros depend on it. For example:
-```
+```common lisp
 (defsystem "hello-lisp"
   :description "hello-lisp: a sample Lisp system."
   :version "0.0.1"

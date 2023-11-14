@@ -3,7 +3,7 @@
 Today I refactored a rust project, which involves using a type for rocket's managed state(https://rocket.rs/v0.5-rc/guide/state/#managed-state). The underlying database behind the type is sqlite via rusqlite crate. Before the refactoring, a database file path was used as the managed state to share database access between rocket handlers. Use `String` as a managed state is simple and straightforward - `String` is both `Send` and `Sync`, and does not need to consider lifetime issue. For the refactoring, I want to use a single object of the type as the shared state. It took me some time to solve all the complaints from rust compiler, mainly due to the type I want to use is not `Sync`.
 
 The type is like this:
-```
+```rust
 pub trait BusinessModel {
   // ...omitted
 }
@@ -25,7 +25,7 @@ type Store = Box<dyn BusinessModel>;
 This does not compile - `rusqlite::Connection` is not `Sync` because it has a field of type `RefCell`. So the root of `!Sync` is in the rusqlite crate. I'm not familiar with sqlite's concurrency model and my project does not use any concurrent ability of sqlite, but by common sense it should be **totally reasonable** to implement database connection as `!Sync`. So instead of replacing rusqlite with some other crates like `sqlx`(which provides a `Sync+Send` pool implementation), what firstly came to my head is to see if there is a way to make the `!Sync` type sync. There actually is one - `Mutex`.
 
 `Mutex` has the following implementation regards `Sync` and `Send`:
-```
+```rust
 unsafe impl<T: ?Sized + Send> Send for Mutex<T> {}
 
 unsafe impl<T: ?Sized + Send> Sync for Mutex<T> {}
@@ -42,7 +42,7 @@ Maybe it's just me, but I often feel that formal definition is usually harder to
 For `Mutex`, the only way the inside owned data can be accessed, is via the `lock` interface. Which means regardless of `Sync` or not the owned type is (whether or not the owned inner type like `RefCell` can be modified via a shared reference), there is always only one thread can access the inner data. This behavior is **exactly** what `Sync` trait means.
 
 But why `Mutex` requires inner type `T: Send` to make itself `Sync`? Let's *assume* the following code compiles (which doesn't):
-```
+```rust
 let rc = Rc::new(1);
 
 let m = Arc::new(Mutex::new(Rc::clone(&rc)));
