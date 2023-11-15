@@ -1,3 +1,5 @@
+=> {{ .URLPath | parent }} ←
+
 {{ .Content }}
 
 ---------------------
@@ -6,3 +8,6 @@ Published on {{ .Date.Format "2006-01-02" }}
 {{ end -}}
 The content for this site is licensed under:
 =>https://creativecommons.org/licenses/by-sa/4.0/ CC-BY-SA
+
+
+
