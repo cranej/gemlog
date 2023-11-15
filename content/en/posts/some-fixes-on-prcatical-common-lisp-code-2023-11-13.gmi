@@ -4,12 +4,12 @@ Have being learning Common Lisp for about two months following Steve's excellent
 
 When reading Practical Common Lisp, I try my best to follow every example in the book. There were some difficulties I have faced which might be worth to write down:
 * I'm not a native English speaker, so the data I used to try the code examples includes a lot of Unicode data. The examples code need some modifications to make them work with Unicode.
-* AllgoServe library plays a significant role in the examples. My lisp is SBCL, so I have to use PortableAllegroServe - which is obsolete, unmaintained for a long time in my opinion (The book was written about 18 years ago - library status could change). Some extra work has to be done to make the examples work as expected.
+* AllegroServe library plays a significant role in the examples. My lisp is SBCL, so I have to use PortableAllegroServe - which is obsolete, unmaintained for a long time in my opinion (The book was written about 18 years ago - library status could change). Some extra work has to be done to make the examples work as expected.
 * There seems some bugs in the examples code, but I'm no Common Lisp expert, so I might be wrong. I'm going to write them down here anyway.
 
 ## Unicode support issues
 
-1. In chapter 28, function 'make-icy-metadata' does not work on title with unicode:
+1. In chapter 28, function 'make-icy-metadata' does not work on unicode data:
 ```common lisp
 (defun make-icy-metadata (title)
   (let* ((text (format nil "StreamTitle='~a';" (substitute #\Space #\' title)))
@@ -27,7 +27,7 @@ When reading Practical Common Lisp, I try my best to follow every example in the
 The footer note 9 says:
 > This function assumes, as has other code you've written, that your Lisp implementation's internal character encoding is ASCII or a superset of ASCII, so you can use CHAR-CODE to translate Lisp CHARACTER objects to bytes of ASCII data.
 
-But the code does not work with unicode even under such assumption - this code fails on SBCL while SBCl uses utf-8 as internal character encoding, which is a superset of ASCII. Function `char-code` simply gives the integer representation of a char, with a superset of ASCII, the integer goes bigger than 255, which can not be wrote into a single byte.
+But the code does not work on unicode data even under such assumption - this code fails on SBCL while SBCl uses utf-8 as internal character encoding, which is a superset of ASCII. Function `char-code` simply gives the integer representation of a char, with a superset of ASCII, the integer goes bigger than 255, which can not be wrote into a single byte.
 
 The fix is simple:
 
@@ -45,7 +45,7 @@ The fix is simple:
 ```
 Function 'string-to-utf-8-bytes' is from library 'trivial-utf-8' which can be installed from quicklisp. Or you can just use 'sb-ext:string-to-octets' in SBCL if you don't care about portability.
 
-2. In chapter 29, function 'obj->base64' and 'base64->obj' are defined using AllgoServe's base64-encode and base64-decode, which do not work on unicode data at least in PortableAllegroServe's implementation.
+2. In chapter 29, function 'obj->base64' and 'base64->obj' are defined using AllegroServe's 'base64-encode' and 'base64-decode', which do not work on unicode data at least in PortableAllegroServe's implementation.
 
 These functions does not throw errors on utf-8 data, they just give out corrupt output. So if you run the mp3browser implementation, related functionalities behave strangely rather than just fail. But once you find the root cause, fixing them is easy:
 ```common lisp
@@ -68,7 +68,7 @@ These functions does not throw errors on utf-8 data, they just give out corrupt 
 ```
 Again, you can install 's-base64' library from quicklisp.
 
-3. In chapter 28, the function 'urlencode' is defined using AllgoServe's unexported function 'net.aserve::encode-form-urlencoded', which does not work on unicode data at least in PortableAllegroServe's implementation.
+3. In chapter 28, the function 'urlencode' is defined using AllegroServe's unexported function 'net.aserve::encode-form-urlencoded', which does not work on unicode data at least in PortableAllegroServe's implementation.
 
 This one requires more efforts to fix. Just fix the implementation of 'urlencode' like this:
 ```common lisp
@@ -77,7 +77,7 @@ This one requires more efforts to fix. Just fix the implementation of 'urlencode
 ```
 is not sufficient.
 
-Before you can retrieve query parameter value and form data in your http handlers, PortableAllegroServe processes raw query strings and form data internally with function 'form-urlencode-to-query'. This function cannot correctly decode data encoded by your own implementation of 'urlencode'.
+Before you can retrieve query parameter value and form data in your http handlers via AllegroServe's 'request-query-value' function, PortableAllegroServe decodes raw query strings and form data for you internally with function 'form-urlencode-to-query'. As the counterpart of its 'encode-form-urlencoded' function, 'form-urlencode-to-query' does not work on unicode data, and cannot correctly decode data encoded by your own implementation of 'urlencode'. So what you get from 'request-query-value' will be corrupt.
 
 The fix is, instead of querying parameters from PortableAllegroServe parsed data, I roll my own implementation to parse raw query strings and form data from raw request, and use them in 'define-url-function' macro (from chapter 26):
 
@@ -151,7 +151,7 @@ The fix is, instead of querying parameters from PortableAllegroServe parsed data
 
 ## PortableAllegroServe issues
 
-Note none of the "fixes" below should be considered as real fixes, they are just quick workarounds to get the examples code run without significant efforts like replacing the web server library to another one.
+Note that none of the "fixes" below should be considered as real fixes, they are just quick workarounds to get the examples code run without significant efforts like replacing the web server library to another one.
 
 1. The 'buffered-bivalent-output-stream' (in file acl-compat/lw-buffering.lisp) has a malformed implementation of 'stream-write-char' generic function:
 ```common lisp
@@ -219,7 +219,7 @@ Once MP3 client disconnects from the server, the handler-case form can't handle 
 
 The while condition in the loop does not make sense - next-metadata will never be nil unless metadata-interval is nil. Metadata-interval is nil when client does not want metadata, in that case with this while condition play-songs will stop playing after the first song finished.
 
-2. Function 'play-current' opened mp3 file in character mode, which cause the following 'read-byte' calls fail.
+2. Function 'play-current' opened mp3 file in character mode, which cause the following 'read-byte' calls fail - this one is so obvious that 'play-current' fails on any song, so I guess maybe it works on the book author's Lisp implementation at the book writing time.
 
 3. Function 'play-current' skips id3 tag with '(file-position mp3 (id3-size song))' before sending the actual mp3 bytes. If you look into the id3-size function, it reads the size from id3-tag object's size slot. Per id3v2.3 & 2.4 spec, the size value read from id3 tag header, does not include the header itself. Here we need to skip the total size of id3 tag.
 
