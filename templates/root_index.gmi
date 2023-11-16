@@ -1,7 +1,7 @@
 {{ .Content -}}
 # cranej's Blog
 
-I'm a programmer, a reader, and a pipe smoker(which is not good). Hopefully I can write more from now on.
+Hello, I'm Crane (cranej on internet). I'm a programmer, currently living in Shanghai. After quitting from a super busy job, I relaunched my personal blog here, hopefully I can write more from now on.
 
 ## Posts
 I write mainly in English, sometimes in Japanese or Chinese.
