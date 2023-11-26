@@ -49,7 +49,7 @@ The discovering of Notmuch[5] Emacs interface is a surprise for me. Although I o
 
 Most importantly, the underlying idea of managing emails via tag system is so nature and brilliant. There is no need to care about emails come from which email account, are inside which IMAP folder, and so on - although you can if you really want to: with notmuch's 'path:' and 'folder:' search terms. Just "M-x notmuch", and jump to the interested tag and hit Enter. And while in the emails list buffer, tag your email as you like.
 
-A basic setup can be:
+A basic setup could be:
 ```Emacs Lisp
 (use-package notmuch
   :hook ((message-setup . mml-secure-message-sign-pgp))
@@ -59,7 +59,7 @@ A basic setup can be:
 		       (interactive)
 		       (notmuch-search-tag (list "+killed" "-inbox"))))))
 ```
-This setup enabled default pgp signing whiling sending mail, and added a single key binding to mark unwanted emails as 'killed'. I also put the following into notmuch pre-new hook:
+This setup enabled default pgp signing when sending mail, and added a single key binding to mark unwanted emails as 'killed'. I also put the following into notmuch pre-new hook:
 ```shell
 #!/usr/bin/sh
 notmuch search --output=files --format=text0 tag:killed | xargs -r0 rm
@@ -72,7 +72,7 @@ For more information, there is nice writing up on stackexchange[6], and notmuch 
 
 ## Others
 
-You probably also want to tune a few settings of Emacs to make it work more "sensibly", and it's nothing wrong if you feel all the default behaviors make sense to you. Search "Emacs beginner" most articles will list some of these. You can also use my Emacs initial file[8] as an reference.
+You probably also want to tune a few settings of Emacs to make it work more "sensibly", but it's nothing wrong if you feel all the default behaviors make sense to you. Search "Emacs beginner" most articles will list some of these. You can also use my Emacs initial file[8] as an reference.
 
 Again, don't copy them directly into your dotfile, try to understand what these settings mean and set them accordingly per your own needs. "C-h v" is your help. 
 
