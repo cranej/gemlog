@@ -1,5 +1,5 @@
 #!/usr/bin/bash
+set +e
 
-./bin/gssg
-cp -a nongmi/. public
-./bin/gem2site public public_html
+mokubune
+gem2site public public_html

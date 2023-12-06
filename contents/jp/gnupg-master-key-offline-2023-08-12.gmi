@@ -1,0 +1,122 @@
+# マスター・キーをオフラインして、GnuPGを使用しましょう
+
+このエッセイは大いに次の文章を参考しました：
+=> https://incenp.org/notes/2015/using-an-offline-gnupg-master-key.html Using an offline GnuPG master key
+
+GnuPGのキーペアが作られたら、一つのサイニング用のマスター・キーと一つの暗号化用のsubkeyが生成されました。そして、もっと多くのsubkeyが使用可能です。もう一つだけのサイニング・キーが足されると、日常使用ではマスター・キーが不要になります。サイニングのsubkeyがあるので、マスター・キーが必要の場合が、他人のキーをサインのときと自己のキーの変更のときになりました。このエッセイでは、オフライン・キーのメリットとマスター・キーのオフラインするの方法とオフラインのマスター・キーの使用方法を紹介します。
+
+## マスター・キーをオフラインしているのメリット
+マスター・キーの機能は、ファイルやドキュメントなどをサインだけじゃありません。他人のキーをサインするなり、自己のキーを変更するなり（ユーザーIDの追加と撤回やsubkeyの生成と削除など）、他人からの署名をあつまるなり、特別の機能があります。それから、マスター・キーの安全性は最も大切です。マスター・キーをオフラインしていたら、きっと安全性が高くなると思います。
+
+## マスター・キーをオフラインするの方法
+まずプライベート・キーをバックアップします:
+```
+$ gpg2 --armor --output private-keys.asc --export-secret-key <ユーザーID>
+```
+
+ちゃんと保存して、次にマスター・キーのkeygripを探します：
+```
+$ gpg2 --list-secret-keys --with-keygrip
+
+/home/crane/.gnupg/pubring.kbx
+------------------------------
+sec  rsa4096 2015-01-09 [SC]
+      B174678027D03590032BE53FD236D5176EC2B0C2
+      Keygrip = E4C4109EB935BF7492DC46D025B98F5C0CDCE972
+uid           [  究極  ] Crane Jin <crane@cranejin.com>
+uid           [  不明  ] cranej <crane.jin@outlook.com>
+ssb   rsa4096 2015-01-09 [E]
+      Keygrip = 5C5794C4D6330B73793F46C3C1B3E4599E55CA08
+ssb   rsa2048 2016-10-15 [A]
+      Keygrip = BD1AE897079BC9D407D4595500B1685E8117FD23
+ssb   rsa4096 2016-10-15 [S]
+      Keygrip = D2F09D65BD79CF6FA3506BC146C466CFEAB96B79
+
+```
+
+出力の通り、私はのマスター・キーのkeygrepはE4C4109EB935BF7492DC46D025B98F5C0CDCE972です。以下の命令でマスター・キーを削除します：
+
+```
+$ gpg-connect-agent "DELETE_KEY E4C4109EB935BF7492DC46D025B98F5C0CDCE972" /bye
+```
+
+それで、マスター・キーの削除が完了した。確認のため、"gpg -K"の命令でプライベート・キーを見てみましょう：
+```
+/home/crane/.gnupg/pubring.kbx
+------------------------------
+sec#  rsa4096 2015-01-09 [SC]
+      B174678027D03590032BE53FD236D5176EC2B0C2
+uid           [  究極  ] Crane Jin <crane@cranejin.com>
+uid           [  不明  ] cranej <crane.jin@outlook.com>
+ssb   rsa4096 2015-01-09 [E]
+ssb   rsa2048 2016-10-15 [A]
+ssb   rsa4096 2016-10-15 [S]
+
+```
+記号＃がsecについたはずです。
+
+## マスター・キーが必要の場合、オフライン・キーの使い方
+その場合、臨時フォルダにオフラインのプライベート・キーをインポートして、そのフォルダをGnuPGホームとして、操作をします。
+
+まず臨時フォルダを作ります：
+```
+$ mkdir ~/gpgtemp
+$ chmod 0700 ~/gpgtemp
+```
+
+プライベート・キーがUSBメモリーにいたら、マウントしておくのは必要です。プライベート・キーをインポートします：
+```
+$ gpg2 --homedir ~/gpgtmp --import /run/media/crane/mystick/private-keys.asc
+```
+
+それから、マスター・プライベートキーを使用することができる。仮にキーを変更してほしいから、以下みたいの命令を使います：
+```
+$ gpg2 --homedir ~/gpgtmp --no-default-keyring --keyring ~/.gnupg/pubring.kbx --edit-key bob@example.com
+```
+
+操作の完了ご、GnuPGエージェントを終えたほうがいいです：
+```
+$ gpg-connect-agent --homedir ~/gpgtmp KILLAGENT /bye
+$ rm -rf ~/gpgtmp
+```
+
+更に、次のスクリプトを利用したら、とても便利だと思います：
+```
+#!/bin/bash
+
+# The UUID of your USB stick
+UUID=FB6A-B7E4
+
+# The pathname to the file containing your private keys
+# on that stick
+KEYFILE=crane-key.asc
+
+# Identify the device file corresponding to your USB stick
+device=$(/sbin/findfs UUID=$UUID)
+
+if [ -n "$device" ]; then
+    # Mount the stick
+    udisksctl mount --block-device $device
+
+    # Create temporary GnuPG home directory
+    tmpdir=$(mktemp -d -p $XDG_RUNTIME_DIR gpg.XXXXXX)
+
+    # Import the private keys
+    gpg2 --homedir $tmpdir --import /run/media/$USER/$UUID/$KEYFILE
+
+    # Unmount the stick
+    udisksctl unmount --block-device $device
+
+    trustdbname=${GNUPGHOME:-$HOME/.gnupg}/trustdb.gpg
+    # Launch GnuPG from the temporary directory,
+    # with the default public keyring
+    # and with any arguments given to us on the command line
+    gpg2 --homedir $tmpdir --no-default-keyring --keyring ${GNUPGHOME:-$HOME/.gnupg}/pubring.kbx \
+		--trustdb-name "$trustdbname" \
+		$@
+
+    # Cleaning up
+    [ -f $tmpdir/S.gpg-agent ] && gpg-connect-agent --homedir $tmpdir KILLAGENT /bye
+    rm -rf $tmpdir
+fi
+```

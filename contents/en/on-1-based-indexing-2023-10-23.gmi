@@ -1,0 +1,7 @@
+# On 0-based vs. 1-based indexing
+
+I think many debates on "0-based vs. 1-based indexing" are on the wrong or at least less-important point - that which one is superior to the other.
+
+The key issue is frequent mind-shifting. Indexing is so fundamental in programming, it has to be a second nature of you when reading or writing code, that you don't need to think about it most time. Which specific approach it is actually does not matter that much, as coding more and more in that approach - either 0-based or 1-based - your brain can accustom to it quickly. But if you use both 0-based indexing languages and 1-based indexing languages for daily programming, you are forced to think about it every time you read/write array indexing, offset calculating, slicing, and other indexing related code, which is so bad and not acceptable at least for me. It's not something more high level like whether the type declarations go after or before variable names, or whether variables are immutable or mutable by default. It's one of the most fundamental building blocks of your thinking when coding, which cannot afford such frequent mind-shifting.
+
+So my approach is simple, as all programming languages I'm using are 0-based indexing languages, I simply refuse to use a 1-based indexing language as long as there are other choices. And if I'm going to design a new programming language, I will choose 0-based indexing no matter how many advantages 1-based indexing theoretically/academically has.
