@@ -3,27 +3,16 @@
 <% end -%>
 # <%= site-title (@ site) %>
 
-Hello, I'm Crane (cranej on internet). I'm a programmer, currently living in Shanghai. After quitting from a super busy job, I relaunched my personal blog here, hopefully I can write more from now on.
+Hello, I'm Crane (cranej on internet). I'm a programmer, currently living in Shanghai.
 
-## Posts
-I write mainly in English, sometimes in Japanese or Chinese.
+## Blog
+<% let ((posts (get-file-contexts "blog/"))) -%>
+<% if posts -%>
+<% loop for post in (subseq posts 0 (min 5 (length posts))) do -%>
+=> /<%= page-url post %> <%= page-date post %> - <%= page-title post %>
+<% end -%>
 
-<% let ((posts (get-file-contexts "en/"))) -%>
-<% if posts -%>
-=> /en/ Contents in English (<%= (princ-to-string (length posts))  %>)
-Last updated on <%= (page-date (first posts)) %>
-<% end -%>
-<% end -%>
-<% let ((posts (get-file-contexts "jp/"))) -%>
-<% if posts -%>
-=> /jp/ 日本語での内容 (<%= (princ-to-string (length posts))  %>)
-Last updated on <%= (page-date (first posts)) %>
-<% end -%>
-<% end -%>
-<% let ((posts (get-file-contexts "zh/"))) -%>
-<% if posts -%>
-=> /zh/ 中文内容 (<%= (princ-to-string (length posts))  %>)
-Last updated on <%= (page-date (first posts)) %>
+=> /blog/ Archive
 <% end -%>
 <% end -%>
 
@@ -39,11 +28,11 @@ Last updated on <%= (page-date (getf page :ctx)) %>
 
 ## Code
 A few tools I wrote mainly for self use, but maybe also useful for others.
-=> https://github.com/cranej github
 => https://codeberg.org/cranej/ codeberg
+=> https://github.com/cranej github
 
 ## Contact
-You can reach me via email:
+If you want to get in touch with me, please send email to:
 => mailto:crane@cranejin.com crane@cranejin.com
 
 If you prefer to send encrypted emails, here is my pgp key:
