@@ -26,17 +26,24 @@ Last updated on <%= (page-date (getf page :ctx)) %>
 Last updated on <%= (page-date (getf page :ctx)) %>
 <% end -%>
 
-## Code
+## Projects
 A few tools I wrote mainly for self use, but maybe also useful for others.
-=> https://codeberg.org/cranej/ codeberg
-=> https://github.com/cranej github
+<% let ((projects (get-file-contexts "projects/"))) -%>
+<% loop for project in projects do -%>
+=> /<%= page-url project %> <%= page-title project %>
+<% end -%>
+<% end -%>
+
+Others:
+=> https://codeberg.org/cranej/ Codeberg
+=> https://github.com/cranej Github
 
 ## Contact
 If you want to get in touch with me, please send email to:
 => mailto:crane@cranejin.com crane@cranejin.com
 
 If you prefer to send encrypted emails, here is my pgp key:
-=> http://pgp.surf.nl/pks/lookup?search=B174678027D03590032BE53FD236D5176EC2B0C2&fingerprint=on&op=index D236D5176EC2B0C2
+=> /publickey.txt D236D5176EC2B0C2
 
 All emails from me will be signed with the above key.
 

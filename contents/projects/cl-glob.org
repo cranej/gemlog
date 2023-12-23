@@ -1,0 +1,114 @@
+#+title: cl-glob: Unix style pathname pattern expansion
+#+date: 2023-12-22
+#+author: cranej
+#+email: crane@cranejin.com
+
+* Summary
+=cl-glob= implements Unix shell style pattern matching and pathname globbing
+in Common Lisp.
+
+=glob= pattern matching does not have a clearly defined and broadly followed behavior.
+For example python's glob module, Rust's glob crate and Bash's glob expansion all
+work differently. Please read the Api document of ~glob-matches~ function for the
+detailed matching rules.
+
+Currently =cl-glob= is /not/ a fast implementation. It uses Common Lisp's pathname Api
+and try its best to not manipulate pathname as string, for better portability. For now
+on my machine (about 5 years old laptop), walking and matching a directory contains 5340
+entries cost ~0.263 seconds. Optimization will be done in further releases.
+
+The Api interface is stable already. 
+
+* Installation
+Until =cl-glob= is accepted by =quicklisp=, you can download it from [[https://codeberg.org/cranej/cl-glob][codeberg repository]].
+
+* Api
+** ~(glob pathname &optional root)~
+Return a possibly empty list of path names that match pathname, which must be
+a string containing a path specification. pathname can be either absolute
+(like /home/user1/lisp/**/*.lisp) or relative (like ../../Tools/*/*.gif), and
+can contain shell-style wildcards.
+
+If root is specified, it has the same effect on glob as changing the current
+directory before calling it.
+
+If pathname is relative, the result will contain paths relative to root.
+
+Examples:
+#+begin_src lisp
+  (glob "/home/user1/lisp/**/*.lisp")
+#+end_src
+  
+Output:
+#+begin_src
+  (#P"/home/user1/lisp/cl-template/cl-template.lisp"
+   #P"/home/user1/lisp/pcl/id3/id3.lisp")
+#+end_src
+
+------
+#+begin_src lisp
+  (glob "*.lisp")
+#+end_src
+
+Output:
+#+begin_src
+  (#P"cl-glob.lisp"
+   #P"packages.lisp"
+   #P"tests.lisp")
+#+end_src
+
+------
+#+begin_src lisp
+  (glob "*.lisp" "../mokubune/")
+#+end_src
+
+Output:
+#+begin_src
+  (#P"../mokubune/init.lisp"
+   #P"../mokubune/mokubune.lisp"
+   #P"../mokubune/packages.lisp"
+   #P"../mokubune/version.lisp")
+#+end_src
+
+------
+#+begin_src lisp
+  (glob "../mokubune/*.lisp")
+#+end_src
+
+Output:
+#+begin_src 
+  (#P"../mokubune/init.lisp"
+   #P"../mokubune/mokubune.lisp"
+   #P"../mokubune/packages.lisp"
+   #P"../mokubune/version.lisp")
+#+end_src
+
+This is the same as ~(glob "*.lisp" "../mokubune/")~.
+
+** ~(glob-matches pattern pathname)~
+Return t if pathname matches pattern.
+
+- =?= matches any single character except file path separator.
+- =*= matches zero or more characters except file path separator.
+- A leading =**= followed by a slash (=**/a=), or =**= between slashes (=a/**/b=)
+  matches zero or more directory components.
+- A trailing =**= (=a/**=) matches anything remain.
+- Other forms of =**= are treated as a single =*=. For example
+  =abc/**b/Makefile= equals =abc/*b/Makefile=, =abc/**.gif= equals =abc/*.gif=.
+- =[...]= [...] matches any single character inside the brackets. Character
+  sequences can also specify ranges of characters, as ordered by Unicode.
+  For example, =[0-9a-z?*]= matches a single character which is =?= or =*= or is
+  between =0= and =9= or is between =a= and =z=. 
+- =[!...]= matches the opposite of =[...]= - any single character not in the
+  brackets.
+- All other characters in pattern matches literally.
+
+** ~(glob-matches-compiled compiled-pattern pathname)~
+Same as =glob-matches=, except that first argument is a compiled pattern
+(via function =compile-pattern=).
+  
+** ~(compile-pattern pattern)~
+Compile the pattern. 
+
+Output object should only be used as parameters of other Apis. Internal structure
+of the output object is subject to change, thus should not be depended directly.

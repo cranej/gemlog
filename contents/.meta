@@ -1,3 +1,4 @@
-blog/**/*.gmi:;lang=en
-jp/**/*.gmi:;lang=jp
-zh/**/*.gmi:;lang=zh-CN
+**/*.org: text/org-mode;charset=UTF-8
+blog/**/*.gmi: ;lang=en
+jp/**/*.gmi: ;lang=ja
+zh/**/*.gmi: ;lang=zh-CN
