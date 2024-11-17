@@ -1,0 +1,128 @@
+body {
+    color: #171717;
+    font-family: monospace;
+    font-size: 16px;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 10px;
+    padding-bottom: 80px;
+}
+
+h1,h2,h3 {
+    color: #ba3925;
+    text-rendering: optimizeLegibility;
+    font-family: "Open Sans", sans-serif;
+}
+
+h1::before {
+  content: "# ";
+}
+
+h2 {
+  margin-top: 40px;
+}
+
+h2::before {
+  content: "## ";
+}
+
+h3::before {
+  content: "### ";
+}
+
+blockquote {
+  margin: 0;
+  padding: 0;
+}
+
+blockquote::before {
+  content: "> ";
+}
+
+blockquote p {
+  font-style: italic;
+  display: inline;
+}
+
+div.empty-line {
+    height: 0.5em;
+    margin:0;
+    padding:0;
+}
+
+article > p:first-child > a {
+    font-size: 200%;
+    font-weight: bold;
+    color: black;
+}
+
+article > p > a {
+    text-decoration: none;
+}
+
+article > p:not(:first-child) > a::before {
+    content: ' => ';
+    font-family: monospace;
+}
+
+p {
+    text-align: justify;
+    margin: 0.25rem;
+}
+
+img {
+  border-radius: 5px;
+}
+
+pre {
+    background-color: #eee;
+    padding: 0.5rem 0.5rem;
+    margin: 25px 0;
+    max-width: 100%;
+    overflow-x: auto;
+    border: solid 1px lightgray;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+
+code, kbd {
+  color: #9d109d;
+}
+
+img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+      background-color: #222;
+      color: white;
+  }
+
+  a {
+      color: aqua;
+  }
+
+  hr {
+      background-color: #ddd;
+  }
+
+  pre {
+      background-color: #353535;
+  }
+
+  code, kbd {
+      color: #ff4cff;
+  }
+}
+
+@media (max-width: 400px) {
+    pre.banner { font-size: 9px; }
+}
+
+@media (max-width: 500px) {
+    pre.banner { font-size: 10px; }
+}

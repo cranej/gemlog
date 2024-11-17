@@ -17,13 +17,11 @@ Hello, I'm Crane (cranej on internet). I'm a programmer, currently living in Sha
 <% end -%>
 
 ## Tinylog
-<% let ((page (find-entity "quick-fix.gmi"))) -%>
+<% if (find-entity "quick-fix.gmi") -%>
 => /quick-fix.gmi Quick "fixes" of various tiny problems
-Last updated on <%= (page-date (getf page :ctx)) %>
 <% end -%>
-<% let ((page (find-entity "stupidities.gmi"))) -%>
+<% if (find-entity "stupidities.gmi") -%>
 => /stupidities.gmi Stupid or ugly things I think
-Last updated on <%= (page-date (getf page :ctx)) %>
 <% end -%>
 
 ## Projects

@@ -1,5 +1,0 @@
-#!/usr/bin/bash
-set +e
-
-mokubune
-gem2site public public_html
