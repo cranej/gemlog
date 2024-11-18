@@ -1,0 +1,41 @@
+# A subtle bug caused by macro in Common Lisp
+
+Yesterday I encountered a subtle bug caused by a carelessly written macro in common lisp. The simplified code is something like:
+
+```lisp
+(defstruct config
+  (field-a nil)
+  (field-b nil))
+  
+(defvar *config* (make-config))
+
+(defun get-value-by (field)
+  (cond ((eq field 'a) (config-field-a *config*))
+        ((eq field 'b) (config-field-b *config*))
+	(t (error "unknown field ~s" field))))
+
+(defmacro some-macro (field num)
+  (let ((value (get-value-by field)))
+       `(+ ,value ,num)))
+
+(defun main ()
+   ;; actually these values are loaded from configuration file 
+   (setf (config-field-a *config*) 1)
+   (setf (config-field-b *config* ) 2)
+   (format t "~d~%" (some-macro a 100)))
+```
+
+I expected the output to be '101', which was obviously wrong if you look at the above simplified code. The call to 'some-macro' from 'main' is expanded as '(+ nil 100)' at *compile time* - at that point fields of struct '*config*' are not set yet. 
+
+However, actual code is much more complicated. And if you consider the typical process of writing Common Lisp program, it's even harder to spot the problem.
+In my case, I loaded the code in slime, and set one of the field in repl for debugging purpose - which lead to very confusing behaviors...
+
+The fix is straightforward:
+
+```lisp
+(defun get-value-by (field)
+  (cond ((eq field 'a) `(config-field-a *config*))
+        ((eq field 'b) `(config-field-b *config*))
+	(t (error "unknown field ~s" field))))
+```
+The helper function should return forms instead of evaluating them too early.
