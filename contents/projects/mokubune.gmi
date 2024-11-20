@@ -1,6 +1,6 @@
-# mokubune - a static site generator
+# mokubune - a static gemini site generator
 
-A static site generating program (or you can think it as a batch processor) written in Common Lisp, try to be as intuitive as possible.
+A static gemini site generating program written in Common Lisp, try to be as intuitive as possible.
 * Try to be intuitive when selecting template file to apply. I found some other similar programs have very confusing template selecting logic.
 * Don't regenerate pages that has no change on its dependencies. This is one of the reasons I write this program - the tool I previously used regenerates everything each time, which is inconvenience when for example publishing site via rsync.
 
@@ -49,7 +49,7 @@ variables you may actually want to configure, and helper functions are provided:
   (config site-output-dir "my-outputs/")
 
   ;;; if you want to convert the generated gemini site to html, add: 
-  (config site-output-html-dir "my-html-outputs/")
+  (config site-html-output-dir "my-html-outputs/")
   
   ;;; if you want to apply templates to markdown files other than copying
   (add-rule "*.md" :apply-template)
