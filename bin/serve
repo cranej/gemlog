@@ -1,0 +1,16 @@
+#!/usr/bin/fish
+
+set sd (realpath (status dirname))
+set wd (realpath "$sd/..")
+
+if test $argv[1] = "gemini"
+    if not command -v gmid > /dev/null
+	echo "Requires command 'gmid'."
+    end
+
+    echo "Serving gemini..."
+    gmid -f -c "$sd/gmid.conf" -D wd="$wd" -D sd="$sd"
+else
+    echo "Serving http..."
+    python3 -m http.server -d "$wd/public/www"
+end
