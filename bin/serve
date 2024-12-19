@@ -3,7 +3,7 @@
 set sd (realpath (status dirname))
 set wd (realpath "$sd/..")
 
-if test $argv[1] = "gemini"
+if test "$argv[1]" = "gemini"
     if not command -v gmid > /dev/null
 	echo "Requires command 'gmid'."
     end

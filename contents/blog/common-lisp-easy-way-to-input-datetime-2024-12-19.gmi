@@ -1,0 +1,96 @@
+# Easy way to input date time in Common Lisp
+
+Most date time libraries require a strict input format when parsing string to date time object. As libraries, it maybe a reasonable design. But when using command line tool which asks for a date time input, I definitely don't want to input a RFC 3399 date time like '2024-12-19T15:20:00'. Command line tools need to accept date time input in a more tolerant format.
+
+Recently I wrote a command line tool, which takes date time as an argument. I'd like to share how it handles date time input. It is too simple to become a library. I just explain the idea, and paste the code here.
+
+The whole idea is, find a sensible way to let user specify the most concerned parts, and complement other parts from a default timestamp.
+Suppose at current moment the time is "2024-12-18T09:05:00+08:00", all valid formats it accepts and their means are:
+
+```
+10 -> 2024-12-18T10:00:00+08:00
+13:20 -> 2024-12-18T13:20:00+08:00
+17:01:38 -> 2024-12-18T17:01:38+08:00
+21 14 -> 2024-12-21T14:00:00+08:00
+5 13:20 -> 2024-12-05T13:20:00+08:00 
+8-3 8:30 -> 2024-08-03T08:30:00+08:00 
+2019-12-21 14:15:20 -> 2019-12-21T14:15:20+08:00
+```
+
+* It splits the input string at space: 1) if there is only one part, take it as 'time'. 2) if there are two splits, the first one is 'date', and the second one is 'time'.
+* Components of 'date' are taken in the order: day, month, and year. Which means that, if there is only one number, it is taken as 'day'.
+* Components or time are taken in the order: hour, minute, and second.  So if there is only one number, it is taken as 'hour'.
+
+That's it. Time to show the code::
+
+```lisp
+(defmacro with-gensyms (syms &body body)
+  `(let ,(loop for s in syms collect `(,s (gensym)))
+    ,@body))
+    
+(defmacro tagged-parts (str sep tags min max &key from-left)  
+  (with-gensyms (gstr gsep gtags gmin gmax gparts gparts-len gtags-len)
+    `(let ((,gstr ,str)
+           (,gsep ,sep)
+           (,gtags ,tags)
+           (,gmin ,min)
+           (,gmax ,max))
+       (let* ((,gparts (uiop:split-string ,gstr :separator ,gsep))
+              (,gparts-len (length ,gparts)))
+         (unless (<= ,gmin ,gparts-len ,gmax)
+           (error "str ~a separated into ~d parts which are not between ~d and ~d"
+                  ,gstr ,gparts-len ,gmin, gmax))
+         (let ((,gtags-len (length ,gtags)))
+           (unless (>= ,gtags-len ,gparts-len)
+             (error "~d tags for ~d parts are not enough"
+                    ,gtags-len ,gparts-len))
+           (loop for part in ,gparts
+                 ,@(if from-left
+                       `(for tag-i from 0 upto (1- ,gtags-len))
+                       `(for tag-i from (- ,gtags-len ,gparts-len)
+                             upto (1- ,gtags-len)))
+                 append (list (aref ,gtags tag-i)
+                              (parse-integer part))))))))
+
+(defun parse-date-time (str)
+  (flet ((parse-date (date)
+           (tagged-parts date '(#\-) #(:year :month :day) 1 3))
+         (parse-time (time)
+           (tagged-parts time '(#\:) #(:hour :minute :second) 1 3 :from-left t)))
+   (let ((parts (remove-if #'(lambda (part) (zerop (length part)))
+                           (uiop:split-string str))))
+     (case (length parts)
+       (2 (append (parse-date (car parts))
+                  (parse-time (cadr parts))))
+       (1 (parse-time (car parts)))
+       (otherwise (error "Invalid datetime: ~a" str))))))
+```
+
+The function 'parse-date-time' splits input string and tags each part as we described earlier. For example:
+
+```lisp
+(parse-date-time "10-12 13")
+ ;; outputs (:month 10 :day 12 :hour 13)
+```
+
+Then it should be straightforward to complement the missing parts using a date time library you choose.  Here is an example using 'local-time' library:
+
+```lisp
+(defun string->timestamp (timestring)
+  (let ((tagged-parts (parse-date-time timestring)))
+    (local-time:with-decoded-timestamp
+        (:hour hour :day day :month month :year year)
+        (local-time:now)
+      (local-time:encode-timestamp 0
+                                   (getf tagged-parts :second 0)
+                                   (getf tagged-parts :minute 0)
+                                   (getf tagged-parts :hour hour)
+                                   (getf tagged-parts :day day)
+                                   (getf tagged-parts :month month)
+                                   (getf tagged-parts :year year)))))
+```
+
+
+About 50 lines of code, we have a sensible way to accept date time input in command line.
+
+The code in this blog is in Public Domain, feel free to do whatever you need. 
