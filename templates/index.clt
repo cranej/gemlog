@@ -6,10 +6,10 @@
 Hello, I'm Crane (cranej on internet). I'm a programmer, currently living in Shanghai.
 
 ## Blog
-<% let ((posts (get-file-contexts "blog/"))) -%>
+<% let ((posts (get-files-of-dir "blog/"))) -%>
 <% if posts -%>
 <% loop for post in (subseq posts 0 (min 5 (length posts))) do -%>
-=> /<%= page-url post %> <%= page-date post %> - <%= page-title post %>
+=> /<%= page-path post %> <%= page-date post %> - <%= page-title post %>
 <% end -%>
 
 => /blog/ Archive
@@ -17,18 +17,18 @@ Hello, I'm Crane (cranej on internet). I'm a programmer, currently living in Sha
 <% end -%>
 
 ## Tinylog
-<% if (find-entity "quick-fix.gmi") -%>
+<% if (find-file "quick-fix.gmi") -%>
 => /quick-fix.gmi Quick "fixes" of various tiny problems
 <% end -%>
-<% if (find-entity "stupidities.gmi") -%>
+<% if (find-file "stupidities.gmi") -%>
 => /stupidities.gmi Stupid or ugly things I think
 <% end -%>
 
 ## Projects
 A few tools I wrote mainly for self use, but maybe also useful for others.
-<% let ((projects (get-file-contexts "projects/"))) -%>
+<% let ((projects (get-files-of-dir "projects/"))) -%>
 <% loop for project in projects do -%>
-=> /<%= page-url project %> <%= page-title project %>
+=> /<%= page-path project %> <%= page-title project %>
 <% end -%>
 <% end -%>
 

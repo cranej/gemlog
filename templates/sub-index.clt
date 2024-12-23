@@ -3,5 +3,5 @@
 <% end -%>
 
 <% loop for post in (@ children) do -%>
-=> /<%= page-url post %> <%= page-date post %> - <%= page-title post %>
+=> /<%= page-path post %> <%= page-date post %> - <%= page-title post %>
 <% end %>
