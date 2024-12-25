@@ -1,0 +1,67 @@
+# Define interactive functions
+
+Last week I wrote a simple function in Common Lisp, to calculate whether I should sold a national debt or not. The function takes 6 parameters, which I found a little  difficult to use. But it's also not worth to add a command line arguments parsing library and write a formal *ui* for it. So inspired by Emacs interactive function, I wrote a very simple macro which defines functions that can be called interactively:
+
+```lisp
+(defun prompt-ask (&rest args)
+  (apply #'format *standard-output* args)
+  (force-output)
+  (read *standard-input*))
+  
+(defmacro define-interactive (name arg-specs &body body)
+  (let ((arg-list (loop for (arg-name prompt)
+                          in (mapcar #'(lambda (spec)
+                                         (destructuring-bind (sym prompt)
+                                             (if (atom spec)
+                                                 (list spec (symbol-name spec))
+                                                 spec)
+                                           (list sym (format nil "~a: " prompt))))
+                                     arg-specs)
+                        collect `(,arg-name (prompt-ask ,prompt)))))
+    `(defun ,name (&optional ,@arg-list)
+       ,@body)))
+```
+
+With this macro, I defined my debt calculation function as:
+
+```lisp
+(define-interactive suggest ((parvalue "票面总值")
+                             (rate "利率(%)")
+                             (rate-for-interest "每年兑息的再投资利率(%)")
+                             (years "剩余期限中的年数")
+                             (days "剩余期限中的天数")
+                             (current-value "现值"))
+  (let* ((rate (/ rate 100))
+         (rate-for-interest (/ rate-for-interest 100))
+         (years (+ years (/ days 365.0)))
+         (year-interest (* parvalue rate))
+         (total-expected (+ parvalue
+                            (loop for i from (floor years) downto 0
+                                  sum (* year-interest
+                                         (expt (1+ rate-for-interest) i)))))
+         (minimal-next-rate (if (>= current-value total-expected)
+                                0
+                                (loop for i from 0.0005 upto 0.5 by 0.001
+                                      for money = (* current-value
+                                                     (expt (1+ i) years))
+                                      when (> money total-expected)
+                                        do (return i)
+                                      finally (return nil)))))
+
+    (format t "持有到期预期收入： ~,2f~%现在卖出需要的下一个最少利率是： ~,2f%~%"
+            total-expected
+            (* 100 (or minimal-next-rate 100)))
+    (values)))
+```
+
+Now we have a function 'suggest' which takes 6 optional parameters, and ask user input for the unspecified ones:
+
+```lisp
+GZ-UTIL> (suggest)
+票面总值: 150000
+利率(%): _
+```
+
+You can still call it non-interactively by specifying all parameters.
+
+The idea and code is so simple that may not worth a blog post, but I do feel happy when writing it. So here we have a blog for it anyway :) 

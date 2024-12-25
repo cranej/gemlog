@@ -16,14 +16,6 @@ Hello, I'm Crane (cranej on internet). I'm a programmer, currently living in Sha
 <% end -%>
 <% end -%>
 
-## Tinylog
-<% if (find-file "quick-fix.gmi") -%>
-=> /quick-fix.gmi Quick "fixes" of various tiny problems
-<% end -%>
-<% if (find-file "stupidities.gmi") -%>
-=> /stupidities.gmi Stupid or ugly things I think
-<% end -%>
-
 ## Projects
 A few tools I wrote mainly for self use, but maybe also useful for others.
 <% let ((projects (get-files-of-dir "projects/"))) -%>
@@ -32,18 +24,24 @@ A few tools I wrote mainly for self use, but maybe also useful for others.
 <% end -%>
 <% end -%>
 
-Others:
-=> https://codeberg.org/cranej/ Codeberg
-=> https://github.com/cranej Github
+## Tinylog
+<% if (find-file "quick-fix.gmi") -%>
+=> /quick-fix.gmi Quick "fixes" of various tiny problems
+<% end -%>
+<% if (find-file "stupidities.gmi") -%>
+=> /stupidities.gmi Stupid or ugly things I think
+<% end -%>
 
 ## Contact
-If you want to get in touch with me, please send email to:
+Get in touch:
 => mailto:crane@cranejin.com crane@cranejin.com
 
 If you prefer to send encrypted emails, here is my pgp key:
 => /publickey.txt D236D5176EC2B0C2
 
-All emails from me will be signed with the above key.
+Codeberg:
+=> https://codeberg.org/cranej/
+
 
 ## Misc.
 This site is published both as a Gemini capsule and a web site. You can read either on Gemini:
