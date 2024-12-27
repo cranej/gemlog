@@ -25,11 +25,15 @@ A few tools I wrote mainly for self use, but maybe also useful for others.
 <% end -%>
 
 ## Tinylog
-<% if (find-file "quick-fix.gmi") -%>
-=> /quick-fix.gmi Quick "fixes" of various tiny problems
+<% let ((post (find-file "quick-fix.gmi"))) -%>
+<% if post -%>
+=> /quick-fix.gmi Quick "fixes" of various tiny problems - <%= page-date post %>
 <% end -%>
-<% if (find-file "stupidities.gmi") -%>
-=> /stupidities.gmi Stupid or ugly things I think
+<% end -%>
+<% let ((post (find-file "stupidities.gmi"))) -%>
+<% if post -%>
+=> /stupidities.gmi Stupid or ugly things I think - <%= page-date post %>
+<% end -%>
 <% end -%>
 
 ## Contact

@@ -1,5 +1,11 @@
 # Stupidities
 
+## 2024-12-27 Someone said Common Lisp is in the same category as Haskell
+
+Today I read a blog post, a famours programmer who often acts as "opinion leader/authority", said that "most lisps are 'in its class' of Haskell, and thus share the same prons and cons of it" (he already claimed he "feels knowledgable enough about to comment on" the languages he wrote, in the very same blog).
+
+I was really amused, LOL:)
+
 ## 2023-09-04 Learn Python The Hard Way
 
 Thought I could find some advanced Python programming books, search engine led me to this book's home page[1]. Right on the left of the page, there is
