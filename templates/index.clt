@@ -3,7 +3,7 @@
 <% end -%>
 # <%= site-title (@ site) %>
 
-Hello, I'm Crane (cranej on internet). I'm a programmer, currently living in Shanghai.
+Hello, I'm Chunhe (cranej on internet). I'm a programmer, currently living in Shanghai.
 
 ## Blog
 <% let ((posts (get-files-of-dir "blog/"))) -%>
